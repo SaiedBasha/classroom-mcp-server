@@ -15,6 +15,11 @@ import java.util.*;
 /**
  * MCP Tool Registry for Classroom Management System.
  * Exposes all tools via @Tool annotation for Claude integration.
+ * 
+ * All parameter names are explicit to clarify what values the LLM should provide:
+ * - IDs (classroomId, studentId, goalId, etc.) are typically Long values from previous operations
+ * - Names (name, nickname, groupName, etc.) are String descriptors
+ * - Counts (count, points, targetPracticeCount) are Integer values
  */
 @Component
 @RequiredArgsConstructor
@@ -33,7 +38,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Classroom Management ====================
     
-    @Tool(description = "Create a new classroom")
+    @Tool(description = "Create a new classroom. Required: name (String - unique classroom name), description (String - classroom purpose/details)")
     public String createClassroom(String name, String description) {
         try {
             Classroom classroom = classroomService.createClassroom(name, description);
@@ -43,7 +48,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Get classroom details by ID")
+    @Tool(description = "Get classroom details by ID. Required: classroomId (Long - numeric ID returned from createClassroom)")
     public String getClassroom(Long classroomId) {
         try {
             Classroom classroom = classroomService.getClassroom(classroomId);
@@ -55,7 +60,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Student Management ====================
     
-    @Tool(description = "Add a student to a classroom")
+    @Tool(description = "Add a student to a classroom. Required: classroomId (Long - ID from createClassroom or listStudents), name (String - full name), nickname (String - unique short name for the student)")
     public String addStudent(Long classroomId, String name, String nickname) {
         try {
             Student student = classroomService.addStudent(classroomId, name, nickname);
@@ -65,7 +70,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Remove a student from the system")
+    @Tool(description = "Remove a student from the system. Required: studentId (Long - numeric ID from addStudent)")
     public String removeStudent(Long studentId) {
         try {
             classroomService.removeStudent(studentId);
@@ -75,7 +80,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Update a student's nickname")
+    @Tool(description = "Update a student's nickname. Required: studentId (Long - numeric ID from addStudent), newNickname (String - new unique nickname)")
     public String updateStudentNickname(Long studentId, String newNickname) {
         try {
             Student student = classroomService.updateStudentNickname(studentId, newNickname);
@@ -85,7 +90,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "List all students in a classroom")
+    @Tool(description = "List all students in a classroom with their points and ranks. Required: classroomId (Long - ID from createClassroom)")
     public String listStudents(Long classroomId) {
         try {
             List<Student> students = classroomService.listStudents(classroomId);
@@ -105,7 +110,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Gamification ====================
     
-    @Tool(description = "Add points to a single student")
+    @Tool(description = "Add points to a single student. Required: studentId (Long - numeric ID from addStudent), points (Integer - positive number of points), reason (String - why points are being awarded)")
     public String addPoints(Long studentId, Integer points, String reason) {
         try {
             gamificationService.addPoints(studentId, points, reason);
@@ -116,7 +121,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Deduct points from a single student")
+    @Tool(description = "Deduct points from a single student. Required: studentId (Long - numeric ID from addStudent), points (Integer - positive number of points to remove), reason (String - why points are being deducted)")
     public String deductPoints(Long studentId, Integer points, String reason) {
         try {
             gamificationService.deductPoints(studentId, points, reason);
@@ -127,17 +132,17 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Add points to all students in a classroom")
+    @Tool(description = "Add points to all students in a classroom at once. Required: classroomId (Long - ID from createClassroom), points (Integer - positive points for each student), reason (String - justification)")
     public String addPointsToClass(Long classroomId, Integer points, String reason) {
         try {
             gamificationService.addPointsToClassStudents(classroomId, points, reason);
-            return "Added " + points + " points to all students in classroom ";
+            return "Added " + points + " points to all students in classroom";
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
     }
     
-    @Tool(description = "Add points to a list of specific students")
+    @Tool(description = "Add points to multiple specific students. Required: studentIds (List<Long> - array of student IDs like [1,2,3]), points (Integer - points for each), reason (String - justification)")
     public String addPointsToStudents(List<Long> studentIds, Integer points, String reason) {
         try {
             gamificationService.addPointsToStudents(studentIds, points, reason);
@@ -147,7 +152,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Award a badge to a student")
+    @Tool(description = "Award a badge to a student. Required: studentId (Long - numeric ID from addStudent), badgeId (Long - numeric ID from createBadge)")
     public String awardBadge(Long studentId, Long badgeId) {
         try {
             gamificationService.awardBadge(studentId, badgeId);
@@ -157,7 +162,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Remove a badge from a student")
+    @Tool(description = "Remove a badge from a student. Required: studentId (Long - numeric ID from addStudent), badgeId (Long - numeric ID from createBadge)")
     public String removeBadge(Long studentId, Long badgeId) {
         try {
             gamificationService.removeBadge(studentId, badgeId);
@@ -167,7 +172,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Create a new badge")
+    @Tool(description = "Create a new badge. Required: name (String - unique badge name), description (String - what it means), icon (String - emoji or icon path)")
     public String createBadge(String name, String description, String icon) {
         try {
             Badge badge = gamificationService.createBadge(name, description, icon);
@@ -179,7 +184,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Leaderboard ====================
     
-    @Tool(description = "Get leaderboard sorted by credit points")
+    @Tool(description = "Get leaderboard sorted by credit points (highest first). Required: classroomId (Long - ID from createClassroom)")
     public String getLeaderboardByPoints(Long classroomId) {
         try {
             List<Student> leaderboard = gamificationService.getLeaderboardByPoints(classroomId);
@@ -197,7 +202,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Get leaderboard sorted by rank level")
+    @Tool(description = "Get leaderboard sorted by rank level (highest rank first). Required: classroomId (Long - ID from createClassroom)")
     public String getLeaderboardByRank(Long classroomId) {
         try {
             List<Student> leaderboard = gamificationService.getLeaderboardByRank(classroomId);
@@ -218,7 +223,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Groups ====================
     
-    @Tool(description = "Create a new student group")
+    @Tool(description = "Create a new student group. Required: classroomId (Long - ID from createClassroom), groupName (String - unique group name), description (String - group purpose)")
     public String createGroup(Long classroomId, String groupName, String description) {
         try {
             StudentGroup group = groupService.createGroup(classroomId, groupName, description);
@@ -228,7 +233,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Add a student to a group by student ID")
+    @Tool(description = "Add a student to a group using student ID. Required: groupId (Long - ID from createGroup), studentId (Long - ID from addStudent)")
     public String addStudentToGroup(Long groupId, Long studentId) {
         try {
             groupService.addStudentToGroup(groupId, studentId);
@@ -238,7 +243,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Add a student to a group by nickname")
+    @Tool(description = "Add a student to a group using their nickname. Required: groupId (Long - ID from createGroup), nickname (String - student nickname)")
     public String addStudentToGroupByNickname(Long groupId, String nickname) {
         try {
             groupService.addStudentToGroupByNickname(groupId, nickname);
@@ -248,7 +253,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Remove a student from a group")
+    @Tool(description = "Remove a student from a group. Required: groupId (Long - ID from createGroup), studentId (Long - ID from addStudent)")
     public String removeStudentFromGroup(Long groupId, Long studentId) {
         try {
             groupService.removeStudentFromGroup(groupId, studentId);
@@ -258,7 +263,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "List all groups in a classroom")
+    @Tool(description = "List all groups in a classroom with their members. Required: classroomId (Long - ID from createClassroom)")
     public String listGroups(Long classroomId) {
         try {
             List<StudentGroup> groups = groupService.listGroups(classroomId);
@@ -278,7 +283,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Tasks ====================
     
-    @Tool(description = "Create a new task/to-do item")
+    @Tool(description = "Create a new task/to-do item. Required: classroomId (Long - ID from createClassroom), title (String - task name), description (String - task details)")
     public String createTask(Long classroomId, String title, String description) {
         try {
             Task task = taskService.createTask(classroomId, title, description, null);
@@ -288,7 +293,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Mark a task as completed")
+    @Tool(description = "Mark a task as completed. Required: taskId (Long - numeric ID from createTask)")
     public String markTaskAsCompleted(Long taskId) {
         try {
             Task task = taskService.markTaskAsCompleted(taskId);
@@ -298,7 +303,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Mark a task as incomplete")
+    @Tool(description = "Mark a task as incomplete/not done. Required: taskId (Long - numeric ID from createTask)")
     public String markTaskAsIncomplete(Long taskId) {
         try {
             Task task = taskService.markTaskAsIncomplete(taskId);
@@ -308,7 +313,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "List all tasks in a classroom")
+    @Tool(description = "List all tasks in a classroom with completion status. Required: classroomId (Long - ID from createClassroom)")
     public String listTasks(Long classroomId) {
         try {
             List<Task> tasks = taskService.listAllTasks(classroomId);
@@ -328,7 +333,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Goals ====================
     
-    @Tool(description = "Create a skill-based goal")
+    @Tool(description = "Create a skill-based goal. Required: classroomId (Long - ID from createClassroom), name (String - goal name), description (String - what skill), targetPracticeCount (Integer - number of practices to complete)")
     public String createGoal(Long classroomId, String name, String description, Integer targetPracticeCount) {
         try {
             Goal goal = goalService.createGoal(classroomId, name, description, targetPracticeCount);
@@ -338,7 +343,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Associate a student with a goal")
+    @Tool(description = "Associate a student with a goal so they can work on it. Required: goalId (Long - ID from createGoal), studentId (Long - ID from addStudent)")
     public String associateStudentWithGoal(Long goalId, Long studentId) {
         try {
             goalService.associateStudentWithGoal(goalId, studentId);
@@ -348,7 +353,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Remove a student from a goal")
+    @Tool(description = "Remove a student from a goal. Required: goalId (Long - ID from createGoal), studentId (Long - ID from addStudent)")
     public String removeStudentFromGoal(Long goalId, Long studentId) {
         try {
             goalService.removeStudentFromGoal(goalId, studentId);
@@ -358,7 +363,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "List all goals in a classroom")
+    @Tool(description = "List all goals in a classroom with student counts and targets. Required: classroomId (Long - ID from createClassroom)")
     public String listGoals(Long classroomId) {
         try {
             List<Goal> goals = goalService.listGoals(classroomId);
@@ -376,14 +381,13 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Get progress for a student on a specific goal")
+    @Tool(description = "Get progress for a student on a specific goal. Required: goalId (Long - ID from createGoal), studentId (Long - ID from addStudent)")
     public String getGoalProgress(Long goalId, Long studentId) {
         try {
             GoalProgress progress = goalService.getStudentGoalProgress(goalId, studentId);
             Student student = studentRepository.findById(studentId).orElseThrow();
             return "Goal Progress for " + student.getNickname() + ": " + progress.getCurrentPracticeCount()
-                   + " / " + progress.getGoal().getTargetPracticeCount() + " practices completed
-                   (Completed: " + progress.getCompleted() + ")";
+                   + " / " + progress.getGoal().getTargetPracticeCount() + " practices completed (Completed: " + progress.getCompleted() + ")";
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -391,7 +395,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Random Selection ====================
     
-    @Tool(description = "Select a random student from a classroom (balanced by today's selections)")
+    @Tool(description = "Select one random student from a classroom with fair balancing. Ensures no student is picked twice in one day if possible. Required: classroomId (Long - ID from createClassroom)")
     public String selectRandomStudent(Long classroomId) {
         try {
             Student selected = randomSelectionService.selectRandomStudent(classroomId);
@@ -401,7 +405,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Select multiple random students from a classroom")
+    @Tool(description = "Select multiple random students from a classroom with fair balancing. Required: classroomId (Long - ID from createClassroom), count (Integer - number of students to select)")
     public String selectRandomStudents(Long classroomId, Integer count) {
         try {
             List<Student> selected = randomSelectionService.selectRandomStudents(classroomId, count);
@@ -415,7 +419,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Select a random student associated with a specific goal")
+    @Tool(description = "Select one random student who is working on a specific goal. Automatically increments their practice count. Required: goalId (Long - ID from createGoal)")
     public String selectRandomStudentForGoal(Long goalId) {
         try {
             Student selected = randomSelectionService.selectRandomStudentForGoal(goalId);
@@ -425,7 +429,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Select a random group from a classroom")
+    @Tool(description = "Select one random group from a classroom. Required: classroomId (Long - ID from createClassroom)")
     public String selectRandomGroup(Long classroomId) {
         try {
             StudentGroup selected = randomSelectionService.selectRandomGroup(classroomId);
@@ -437,7 +441,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Data Portability (Excel) ====================
     
-    @Tool(description = "Export classroom data to Excel file")
+    @Tool(description = "Export classroom data to an Excel file. Required: classroomId (Long - ID from createClassroom), filename (String - output filename like 'my_classroom.xlsx')")
     public String exportClassroomToExcel(Long classroomId, String filename) {
         try {
             String filepath = excelService.exportClassroomToExcel(classroomId, filename);
@@ -447,7 +451,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Import classroom data from Excel file")
+    @Tool(description = "Import classroom data from an Excel file. Required: filename (String - the filename to import from)")
     public String importClassroomFromExcel(String filename) {
         try {
             String result = excelService.importClassroomFromExcel(filename);
@@ -457,14 +461,14 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Get the configured Excel export directory")
+    @Tool(description = "Get the configured directory path where Excel files are stored or will be saved")
     public String getExcelDirectory() {
         return "Excel files directory: " + excelService.getExcelDirectory();
     }
     
     // ==================== Daily Reporting ====================
     
-    @Tool(description = "Generate a report for today's classroom activities")
+    @Tool(description = "Generate a detailed report of all classroom activities from today. Required: classroomId (Long - ID from createClassroom)")
     public String generateDailyReportToday(Long classroomId) {
         try {
             Map<String, Object> report = reportingService.generateDailyReportForToday(classroomId);
@@ -474,7 +478,7 @@ public class ClassroomToolRegistry {
         }
     }
     
-    @Tool(description = "Generate a report for a specific date")
+    @Tool(description = "Generate a detailed report of classroom activities for a specific date. Required: classroomId (Long - ID from createClassroom), dateStr (String - date in format YYYY-MM-DD like '2026-09-03')")
     public String generateDailyReport(Long classroomId, String dateStr) {
         try {
             LocalDate date = LocalDate.parse(dateStr);
