@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: classroom-mcp-server
+  datasource:
+    url: jdbc:h2:file:./data/classroom_mcp_db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+app:
+  data:
+    excel-dir: ./exports
+    database:
+      file-path: ./data/classroom_mcp_db
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO
+    com.classroom: DEBUG
+    org.springframework.ai: DEBUG
