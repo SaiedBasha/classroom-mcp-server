@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -50,8 +51,9 @@ class ClassroomToolRegistryIntegrationTest {
     void setUp() {
         // Create a classroom for testing
         String result = toolRegistry.createClassroom("Test Classroom", "Testing MCP tools");
+        Classroom classroom = classroomRepository.findByName("Test Classroom").orElse(null);
         assertThat(result).contains("created successfully");
-        classroomId = 1L; // First created classroom
+        classroomId = classroom.getId(); // First created classroom
     }
     
     // ==================== Classroom Management Tests ====================
@@ -580,10 +582,5 @@ class ClassroomToolRegistryIntegrationTest {
         assertTrue(students.contains("alice"));
         assertTrue(students.contains("bob"));
         assertTrue(students.contains("charlie"));
-    }
-    
-    // Assertion helper for readability
-    private void assertThat(Object actual) {
-        assertNotNull(actual);
     }
 }

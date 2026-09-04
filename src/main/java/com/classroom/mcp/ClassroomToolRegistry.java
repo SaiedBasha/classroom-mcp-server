@@ -1,15 +1,15 @@
 package com.classroom.mcp;
 
 import com.classroom.entity.*;
+import com.classroom.repository.StudentRepository;
 import com.classroom.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.model.tool.Tool;
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -38,7 +38,7 @@ public class ClassroomToolRegistry {
     
     // ==================== Classroom Management ====================
     
-    @Tool(description = "Create a new classroom. Required: name (String - unique classroom name), description (String - classroom purpose/details)")
+    @org.springframework.ai.tool.annotation.Tool(description = "Create a new classroom. Required: name (String - unique classroom name), description (String - classroom purpose/details)")
     public String createClassroom(String name, String description) {
         try {
             Classroom classroom = classroomService.createClassroom(name, description);
@@ -52,6 +52,16 @@ public class ClassroomToolRegistry {
     public String getClassroom(Long classroomId) {
         try {
             Classroom classroom = classroomService.getClassroom(classroomId);
+            return "Classroom: " + classroom.getName() + " (ID: " + classroom.getId() + ", Students: " + classroom.getStudents().size() + ")";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    @Tool(description = "Get classroom details by Name. Required: classroomName (String - string returned from createClassroom)")
+    public String getClassroom(String classroomName) {
+        try {
+            Classroom classroom = classroomService.getClassroomByName(classroomName);
             return "Classroom: " + classroom.getName() + " (ID: " + classroom.getId() + ", Students: " + classroom.getStudents().size() + ")";
         } catch (Exception e) {
             return "Error: " + e.getMessage();

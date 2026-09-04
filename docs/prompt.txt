@@ -1,0 +1,77 @@
+#############################################
+me 
+
+create an mcp server using java (version 25) spring ai (v2 or higher)\h2 file db (project compressed to be downloaded)
+mcp server should have tools for teacher to:- 
+create classes
+add student(s) 
+remove student(s)
+give\remove\edit nick name to student
+create student groups with name and some students (by names or nick names)
+add\remove credit points to all class students, one student, some students or to group of students (by names or nick names)
+add\remove bagdges to all class students, one student, some students or to group of students (by names or nick names)
+list class students\groups
+show Leaderboards
+export\import data in excel sheets (classes, students, groups, scores, ...)
+select random student(s) by count to do a task ex: answer questions\reading\...
+select random group(s) by count to do a task ex: answer questions\reading\...
+add to do tasks
+mark\unmark tasks as done
+list to do tasks
+add\edit\remove\list goals(releated to students skills) with weight to achive with students
+associate student\students with goal to increase thier skills
+select random student\students associated to goal to do a task ex: answer questions\reading\...
+when selecting random student(s)\group(s), try to be balanced, so all students  got chance to practice
+show percentage or updates about goals progress
+show summary about class\session actions, like who got\lost points, practice, rank level increased\decreased
+goal progress be measured by student(s)\group(s) practice
+Session tracking for balanced picks & summaries by calendar day
+MCP transport for the server stdio (local process, for Claude Desktop/Code)
+ 
+lets discuss if something not clear or needs decision before processing with implementation.
+
+
+###############################################
+gemini
+
+**Role:** You are an expert Java architect specializing in Spring Boot, Spring AI, and the Model Context Protocol (MCP).
+
+**Project Objective:** 
+Create a production-ready MCP server exposed via stdio transport (for Claude Desktop/Code integration). The application is a Teacher's Classroom Management System. Output the complete project structure, source code, `pom.xml`, and a script/instructions to compress the final output into a downloadable zip file.
+
+**Tech Stack:**
+*   **Java:** Version 25 (utilize modern features like records, pattern matching, and virtual threads).
+*   **Framework:** Spring Boot 3.4+ and Spring AI (v2 or the latest milestone supporting MCP).
+*   **Database:** H2 File-based Database (`jdbc:h2:file:./data/classroom_mcp_db`).
+*   **Data Export/Import:** Apache POI (or FastExcel) for Excel `.xlsx` processing.
+
+**Core Domain Entities (JPA/Hibernate):**
+*   **Classroom**, **Student** (name, nickname, points).
+*   **RankLevel**: Handled dynamically or via a configuration table strictly tied to credit point thresholds (e.g., 0-50 = Bronze, 51-100 = Silver).
+*   **StudentGroup**.
+*   **Badge** (awarded items), **Task** (To-Do items), **Goal** (Skill objectives with target practice count and current practice count).
+*   **SessionLog** (tracking daily actions, points gained/lost, practices, and balanced selection history timestamped by calendar day).
+
+**Required MCP Tools (Annotated with `@Tool`):**
+1.  **Class & Student Management:** Create classes; add/remove students; set/edit nicknames; list students.
+2.  **Groups:** Create groups containing specific students (by name/nickname); list groups.
+3.  **Gamification:** Add/remove points and badges. Support batch operations (entire class, single student, specific list of students, or a whole group). Automatic rank adjustments based on point thresholds.
+4.  **Leaderboard:** Show leaderboards based on credit points and ranks.
+5.  **Task Management (To-Do):** Add, mark/unmark as done, and list tasks.
+6.  **Goal Management:** Add/edit/remove/list skill-based goals with a target practice "count". Associate students with goals. Track progress dynamically by incrementing the practice count when a student is selected for a relevant task.
+7.  **Balanced Random Selection:** Select random student(s) or group(s) for a task (e.g., reading, answering). **Constraint:** Must read the daily Session Log to balance the picks, ensuring all students get a fair chance to practice before anyone is repeated on that calendar day. Include a variant to select random students specifically associated with a particular goal.
+8.  **Data Portability (Excel):** Export and import classes, students, groups, and scores via Excel sheets. 
+    *   *File Handling:* Read/write files to a configurable local directory (e.g., defined in `application.yml` as `app.data.excel-dir`). The tool should accept a filename and return the absolute local path to the LLM so the user knows where to find/place it.
+    *   *Collision Rule:* If importing and a student/group already exists, explicitly throw an error (no silent overwrites).
+9.  **Daily Reporting:** Generate a summary for a specific calendar day (defaulting to today). Show points gained/lost, practices completed, rank levels changed, and goal progress updates for that specific day. No explicit session start/end is needed; query by calendar date.
+
+**Implementation Requirements:**
+*   Provide the `pom.xml` with dependencies for Spring Web, Spring Data JPA, H2, Spring AI MCP server, and Apache POI.
+*   Provide `application.yml` configuring the H2 file database, Excel directory path, and the Spring AI MCP stdio auto-configuration.
+*   Organize code logically into `entity`, `repository`, `service`, and `mcp` (tool registry) packages.
+*   Provide a robust `RandomSelectionService` that queries the database for the least-picked students for the current calendar day to ensure balanced picking.
+*   Provide a bash script (`build-and-zip.sh`) or a Java Maven plugin configuration to package the generated project into a zip file for download.
+
+
+
+
